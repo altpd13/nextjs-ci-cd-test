@@ -27,6 +27,10 @@ import {
 import { arbitrum, arbitrumSepolia, mainnet, sepolia } from "viem/chains";
 import _ from "lodash";
 
+//Sui
+import { createNetworkConfig as suiCreateNetworkConfig } from "@mysten/dapp-kit";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
+
 export const configGeneral = createConfigGeneral({
   chains: [mainnet, sepolia, arbitrum, arbitrumSepolia],
   ssr: true,
@@ -56,12 +60,78 @@ export function SearchContractWrapper() {
     </WagmiProvider>
   );
 }
-
+const getSuiSuggestionList = async (objectId: string) => {
+  const networks = ["testnet", "mainnet", "devnet"];
+  try {
+    const suiSuggestionList = await Promise.all(
+      networks.map(async (network: any) => {
+        //change type
+        const client = new SuiClient({ url: getFullnodeUrl(network) });
+        const suiResult = await client.getObject({
+          id: objectId,
+        });
+        if (suiResult.error) {
+          console.log("Client Error");
+          console.log(suiResult.error);
+          return {
+            chainName: "",
+            networkName: "",
+            isContract: false,
+            address: objectId,
+          };
+        } else {
+          return {
+            chainName: "Sui",
+            networkName: network,
+            isContract: true,
+            address: objectId,
+          };
+        }
+      })
+    );
+    return suiSuggestionList.filter((suggestion) => suggestion.isContract);
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
 const getSuggestionsList = async (address: string) => {
   // TODO: Add other chains here
   const chainIds = [mainnet.id, sepolia.id, arbitrum.id, arbitrumSepolia.id];
+  const suiNetworks = ["testnet", "mainnet", "devnet"];
 
   try {
+    if (address.length === 66) {
+      console.log('sui')
+      const objectId = address;
+      const suiSuggestionList = await Promise.all(
+        suiNetworks.map(async (network: any) => {
+          //change type
+          const client = new SuiClient({ url: getFullnodeUrl(network) });
+          const suiResult = await client.getObject({
+            id: objectId,
+          });
+          if (suiResult.error) {
+            console.log("Client Error");
+            console.log(suiResult.error);
+            return {
+              chainName: "",
+              networkName: "",
+              isContract: false,
+              address: objectId,
+            };
+          } else {
+            return {
+              chainName: "Sui",
+              networkName: network,
+              isContract: true,
+              address: objectId,
+            };
+          }
+        })
+      );
+      return suiSuggestionList.filter((suggestion) => suggestion.isContract);
+    }
     // starknet suggestion
     const networks = [
       {
