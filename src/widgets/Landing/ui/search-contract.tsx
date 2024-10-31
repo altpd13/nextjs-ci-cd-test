@@ -102,7 +102,7 @@ const getSuggestionsList = async (address: string) => {
 
   try {
     if (address.length === 66) {
-      console.log('sui')
+      //TODO sperate query owned object and packageId
       const objectId = address;
       const suiSuggestionList = await Promise.all(
         suiNetworks.map(async (network: any) => {
@@ -130,17 +130,20 @@ const getSuggestionsList = async (address: string) => {
           }
         })
       );
+      console.log(
+        suiSuggestionList.filter((suggestion) => suggestion.isContract)
+      );
       return suiSuggestionList.filter((suggestion) => suggestion.isContract);
     }
     // starknet suggestion
     const networks = [
       {
         network: "mainnet",
-        url: process.env.NEXT_PUBLIC_STARKNET_MAINNET_URL
+        url: process.env.NEXT_PUBLIC_STARKNET_MAINNET_URL,
       },
       {
         network: "sepolia",
-        url: process.env.NEXT_PUBLIC_STARKNET_SEPOLIA_URL
+        url: process.env.NEXT_PUBLIC_STARKNET_SEPOLIA_URL,
       },
     ];
     const starknetSuggestion = await Promise.all(
@@ -246,6 +249,7 @@ export function SearchContract() {
     () =>
       _.debounce(async (address) => {
         const suggestions = await getSuggestionsList(address);
+        //@ts-ignore TODO: Remove this when commit
         setSuggestions(suggestions);
       }, 300),
     []
@@ -267,12 +271,21 @@ export function SearchContract() {
     isContract: boolean;
     address: string;
   }) => {
-    router.push(
-      `/verify?chain=${suggestion.chainName.toLowerCase()}&network=${suggestion.networkName.toLowerCase()}&contractAddress=${
-        suggestion.address
-      }`
-    );
-    setIsOpen(false);
+    if (suggestion.chainName.toLowerCase() === "sui") {
+      router.push(
+        `/verify/sui?chain=${suggestion.chainName.toLowerCase()}&network=${suggestion.networkName.toLowerCase()}&contractAddress=${
+          suggestion.address
+        }`
+      );
+      setIsOpen(false);
+    } else {
+      router.push(
+        `/verify?chain=${suggestion.chainName.toLowerCase()}&network=${suggestion.networkName.toLowerCase()}&contractAddress=${
+          suggestion.address
+        }`
+      );
+      setIsOpen(false);
+    }
   };
 
   return (
