@@ -6,13 +6,13 @@ import {
 import { SuiNetwork } from "@/src/entities/verifications/model/types";
 import { baseUrl } from "@/src/features/verify/api";
 import { SuiVerifiedInfo } from "./sui-verified-info";
+import SuiVerifyStepper from "./sui-verify-stepper";
 
 export const SuiVerifyPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
 }) => {
-  const chain = searchParams?.chain;
   const network = searchParams?.network as SuiNetwork;
   const objectId = searchParams?.contractAddress;
   let isVerified = false;
@@ -44,16 +44,12 @@ export const SuiVerifyPage = async ({
               verifiedSrcUrl={verifiedSrcUrl}
             />
           ) : (
-            // <VerifyStepper
-            //   initialStep={initialStep}
-            //   chain={chain}
-            //   network={network}
-            //   contractAddress={contractAddress}
-            //   compilerType={compilerType}
-            //   compilerVersion={compilerVersion}
-            //   checkResult={result || undefined}
-            // />
-            <></>
+            <SuiVerifyStepper
+              network={network}
+              initialStep={initialStep}
+              checkResult={result || undefined}
+              packageId={objectId}
+            />
           )}
         </div>
       </div>

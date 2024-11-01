@@ -7,7 +7,7 @@ import { SuiContractInteract } from "./sui-contract-interact";
 import SuiProviderWrapper from "./sui-provider-wrapper";
 
 // For Sui Modal
-import '@mysten/dapp-kit/dist/index.css';
+import "@mysten/dapp-kit/dist/index.css";
 
 interface VerifiedInfoProps {
   packageId: string;
@@ -19,7 +19,7 @@ export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
   verifiedSrcUrl,
 }) => {
   return (
-    <SuiProviderWrapper>
+    <>
       <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
         <p className="block sm:inline">Package {packageId} has been verified</p>
         <br />
@@ -42,6 +42,6 @@ export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
           <SuiContractInteract packageId={packageId} />
         </TabsContent>
       </Tabs>
-    </SuiProviderWrapper>
+    </>
   );
 };
