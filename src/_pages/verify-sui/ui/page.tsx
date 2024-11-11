@@ -19,12 +19,14 @@ export const SuiVerifyPage = async ({
   let verifiedSrcUrl = null;
   let initialStep = 0;
   let result = null;
+  let isRemixSrcUploaded = false;
 
   if (objectId) {
     result = await getSuiVerification({ network, packageId: objectId });
     if (result?.isVerified) {
       verifiedSrcUrl = result.verifiedSrcUrl;
       isVerified = result.isVerified;
+      isRemixSrcUploaded = result.isRemixSrcUploaded;
     }
   }
   return (

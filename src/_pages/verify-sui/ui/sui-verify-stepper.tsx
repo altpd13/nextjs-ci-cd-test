@@ -5,6 +5,7 @@ import { FC, useState } from "react";
 import SuiContractVerifyForm from "./sui-contract-verify-form";
 import { SuiNetwork } from "@/src/entities/verifications/model/types";
 import SuiProviderWrapper from "./sui-provider-wrapper";
+import ResultVerifySui from "./result-verify-sui";
 
 const steps = [
   { label: "Select Package" },
@@ -19,8 +20,10 @@ interface SuiVeifyStepperProps {
 }
 
 export type SuiPackageInfo = {
+  network: SuiNetwork;
   packageId: string;
   packageFile: File | null;
+  srcFileId?: string;
 };
 
 const SuiVerifyStepper: FC<SuiVeifyStepperProps> = ({
@@ -31,11 +34,12 @@ const SuiVerifyStepper: FC<SuiVeifyStepperProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [packageInfo, setPackageInfo] = useState<SuiPackageInfo>({
+    network: network,
     packageId: packageId || "",
     packageFile: null,
   });
   return (
-    <SuiProviderWrapper>
+    <SuiProviderWrapper network={network}>
       <Stepper
         initialStep={initialStep}
         steps={steps}
@@ -59,18 +63,12 @@ const SuiVerifyStepper: FC<SuiVeifyStepperProps> = ({
                   setPackageInfo={setPackageInfo}
                 />
               )}
-              {/* {index === 1 && (
-              <ContractVerifyForm
-                contractInfo={contractInfo}
-                setContractInfo={setContractInfo}
-                isRemixSrcUploaded={
-                  chain === "arbitrum"
-                    ? (checkResult as StylusVerificationCheckResultDto)
-                        .isRemixSrcUploaded
-                    : false
-                }
-              />
-            )} */}
+              {index === 1 && (
+                <ResultVerifySui
+                  packageInfo={packageInfo}
+                  isRemixSrcUploaded={checkResult.isRemixSrcUploaded}
+                ></ResultVerifySui>
+              )}
             </Step>
           );
         })}

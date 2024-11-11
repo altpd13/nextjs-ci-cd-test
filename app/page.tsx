@@ -9,9 +9,9 @@ export default async function HomeWrapper() {
       <div className="relative mx-auto mt-12 flex rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-50">
         <SearchContractWrapper />
       </div>
-      <div className="mt-24">
+      {/* <div className="mt-24">
         <Tools />
-      </div>
+      </div> */}
     </div>
   );
 }

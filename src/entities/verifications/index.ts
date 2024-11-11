@@ -117,8 +117,8 @@ export const postSuiSourceVerification = async (
     const formData = new FormData();
     formData.append("network", network);
     formData.append("packageId", packageId);
-    formData.append("srcZipFile", multerFileToBlob(srcZipFile), srcZipFile.originalname);
-    formData.append("srcFileId", srcFileId);
+    formData.append("srcZipFile", multerFileToBlob(srcZipFile));
+    // formData.append("srcFileId", srcFileId);
 
     const response = await axios.post("https://verify.welldonestudio.io/sui/verifications/sources", formData, {
       headers: {
