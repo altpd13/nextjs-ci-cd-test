@@ -104,7 +104,7 @@ const ResultVerifySui: FC<ResultVerifySuiProps> = ({
       }
       return result;
     },
-    [packageInfo]
+    [packageInfo],
   );
 
   useEffect(() => {
@@ -154,9 +154,8 @@ const ResultVerifySui: FC<ResultVerifySuiProps> = ({
               </p>
               <Button
                 onClick={() => {
-                  console.log("he);
                   router.push(
-                    `/verify/sui?chain=sui&network=${verifiedResult.network}&contractAddress=${verifiedResult.packageId}`
+                    `/verify/sui?chain=sui&network=${verifiedResult.network}&contractAddress=${verifiedResult.packageId}`,
                   );
                 }}
               >

@@ -22,7 +22,7 @@ type FileStructure = {
 export const SuiCodeExplorer = (url: string) => {
   const [fileStructure, setFileStructure] = React.useState<FileStructure[]>([]);
   const [selectedFile, setSelectedFile] = React.useState<FileStructure | null>(
-    null
+    null,
   );
 
   const processFiles = async (unzipped: any) => {
@@ -55,7 +55,7 @@ export const SuiCodeExplorer = (url: string) => {
       for (let i = 0; i < path.length; i++) {
         const name = path[i];
         const existing = current.find(
-          (item: FileStructure) => item.name === name
+          (item: FileStructure) => item.name === name,
         );
         if (existing) {
           current = existing.children!;

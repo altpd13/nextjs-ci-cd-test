@@ -1,12 +1,13 @@
 "use client";
 
-import { Dispatch, FC, SetStateAction, useState } from "react";
-import { InputFile } from "../../verify/ui/input-file";
+import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
 import { Button, Input, Label } from "@/src/shared/ui";
 import { SuiPackageInfo } from "./sui-verify-stepper";
 import { useSuiClient } from "@mysten/dapp-kit";
 import { SuiNetwork } from "@/src/entities/verifications/model/types";
 import { useStepper } from "@/src/widgets/Stpper/lib/use-stepper";
+import axios from "axios";
+import { baseUrl } from "@/src/features/verify/api";
 
 interface SuiContractVerifyFormProps {
   network: SuiNetwork;
@@ -14,15 +15,39 @@ interface SuiContractVerifyFormProps {
   setPackageInfo: Dispatch<SetStateAction<SuiPackageInfo>>;
   isRemixSrcUploaded?: boolean;
 }
-
+export interface SuiVerificationCheckResultDto {
+  network: string;
+  packageId: string;
+  isVerified: boolean;
+  isRemixSrcUploaded: boolean;
+  verifiedSrcUrl: string | null;
+  errMsg: string | null;
+}
 const SuiContractVerifyForm: FC<SuiContractVerifyFormProps> = ({
   network,
   packageInfo,
   setPackageInfo,
 }) => {
+  const [suiVerificationCheckResultDto, setSuiVerificationCheckResultDto] =
+    useState<SuiVerificationCheckResultDto>();
   const [isPackageExists, setIsPackageExists] = useState<boolean>(true);
   const suiClient = useSuiClient();
   const { nextStep } = useStepper();
+
+  useEffect(() => {
+    axios
+      .get(
+        `${baseUrl}/sui/verifications?network=${packageInfo.network}&packageId=${packageInfo.packageId}`,
+      )
+      .then((response) => {
+        if (response.status === 200) {
+          setSuiVerificationCheckResultDto({ ...response.data });
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  }, [packageInfo]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -36,7 +61,7 @@ const SuiContractVerifyForm: FC<SuiContractVerifyFormProps> = ({
   };
 
   const handlePackageIdChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     try {
       setPackageInfo((prevValue) => ({
@@ -75,18 +100,28 @@ const SuiContractVerifyForm: FC<SuiContractVerifyFormProps> = ({
           onChange={handlePackageIdChange}
         />
       </div>
-      <div className="grid w-full max-w-sm items-center gap-1.5">
-        {packageInfo.packageFile ? null : (
-          <Label htmlFor="package-file" className="block text-sm font-medium ">
-            Please upload source code of package
-          </Label>
-        )}
-        <Input id="picture" type="file" onChange={handleFileChange} />
-        {packageInfo.packageFile && (
-          <Label htmlFor="picture" className="text-sm">
-            {/* TODO: Find the way for file */}
-            {packageInfo.packageFile.name}
-          </Label>
+
+      <div>
+        {suiVerificationCheckResultDto?.isRemixSrcUploaded ? (
+          <div>Already source file uploaded.</div>
+        ) : (
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            {packageInfo.packageFile ? null : (
+              <Label
+                htmlFor="package-file"
+                className="block text-sm font-medium "
+              >
+                Please upload source code of package
+              </Label>
+            )}
+            <Input id="picture" type="file" onChange={handleFileChange} />
+            {packageInfo.packageFile && (
+              <Label htmlFor="picture" className="text-sm">
+                {/* TODO: Find the way for file */}
+                {packageInfo.packageFile.name}
+              </Label>
+            )}
+          </div>
         )}
       </div>
       <Button

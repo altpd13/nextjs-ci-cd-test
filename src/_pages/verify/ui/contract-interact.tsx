@@ -97,13 +97,13 @@ export const ContractInteract: FC<ContractInteractProps> = ({
         (abiItem: Abi) =>
           isFunctionFragment(abiItem) &&
           (abiItem.stateMutability === "view" ||
-            abiItem.stateMutability === "pure")
+            abiItem.stateMutability === "pure"),
       );
       const writeAbi = totalAbi.filter(
         (abiItem: Abi) =>
           isFunctionFragment(abiItem) &&
           abiItem.stateMutability !== "view" &&
-          abiItem.stateMutability !== "pure"
+          abiItem.stateMutability !== "pure",
       );
       setAbi(totalAbi);
       setReadAbiFragments(readAbi);

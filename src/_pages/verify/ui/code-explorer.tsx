@@ -27,7 +27,7 @@ type FileStructure = {
 export const CodeExplorer: FC<CodeExplorerProps> = ({ url }) => {
   const [fileStructure, setFileStructure] = React.useState<FileStructure[]>([]);
   const [selectedFile, setSelectedFile] = React.useState<FileStructure | null>(
-    null
+    null,
   );
 
   const processFiles = async (unzipped: any) => {
@@ -60,7 +60,7 @@ export const CodeExplorer: FC<CodeExplorerProps> = ({ url }) => {
       for (let i = 0; i < path.length; i++) {
         const name = path[i];
         const existing = current.find(
-          (item: FileStructure) => item.name === name
+          (item: FileStructure) => item.name === name,
         );
         if (existing) {
           current = existing.children!;
@@ -77,7 +77,7 @@ export const CodeExplorer: FC<CodeExplorerProps> = ({ url }) => {
       }
       return acc;
     }, []);
-    setFileStructure(structedFiles);
+    setFileStructure(structedFiles.filter((f) => f.name !== "__MACOSX"));
   };
 
   useEffect(() => {

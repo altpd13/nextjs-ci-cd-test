@@ -48,7 +48,6 @@ const SuiVerifyStepper: FC<SuiVeifyStepperProps> = ({
       >
         {steps.map((stepProps, index) => {
           return (
-            
             <Step key={stepProps.label} {...stepProps}>
               {index === 0 && (
                 <SuiContractVerifyForm
@@ -60,7 +59,7 @@ const SuiVerifyStepper: FC<SuiVeifyStepperProps> = ({
               {index === 1 && (
                 <ResultVerifySui
                   packageInfo={packageInfo}
-                  isRemixSrcUploaded={checkResult.isRemixSrcUploaded}
+                  isRemixSrcUploaded={checkResult?.isRemixSrcUploaded || false}
                 ></ResultVerifySui>
               )}
             </Step>
