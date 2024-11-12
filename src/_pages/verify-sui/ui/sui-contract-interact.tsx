@@ -48,10 +48,12 @@ const queryClient = new QueryClient();
 
 //to here
 interface SuiContractInteractProps {
+  network: SuiNetwork;
   packageId: string;
 }
 
 export const SuiContractInteract: FC<SuiContractInteractProps> = ({
+  network,
   packageId,
 }) => {
   //TODO: Add account owned Packages
@@ -67,7 +69,8 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
 
   const initPackageCtx = async (packageId: string) => {
     try {
-      const modules = await getModules(packageId);
+      console.log(currentAccount?.chains);
+      const modules = await getModules(packageId, network);
       if (isEmptyList(modules)) {
         //TODO: add clean up
         return;

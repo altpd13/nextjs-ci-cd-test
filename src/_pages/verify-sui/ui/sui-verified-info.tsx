@@ -8,18 +8,21 @@ import SuiProviderWrapper from "./sui-provider-wrapper";
 
 // For Sui Modal
 import "@mysten/dapp-kit/dist/index.css";
+import { SuiNetwork } from "@/src/entities/verifications/model/types";
 
 interface VerifiedInfoProps {
+  network: SuiNetwork;
   packageId: string;
   verifiedSrcUrl: string;
 }
 
 export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
+  network,
   packageId,
   verifiedSrcUrl,
 }) => {
   return (
-    <>
+    <SuiProviderWrapper network={network}>
       <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
         <p className="block sm:inline">Package {packageId} has been verified</p>
         <br />
@@ -39,9 +42,9 @@ export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
           <CodeExplorer url={verifiedSrcUrl} />
         </TabsContent>
         <TabsContent value="interact">
-          <SuiContractInteract packageId={packageId} />
+          <SuiContractInteract network={network} packageId={packageId} />
         </TabsContent>
       </Tabs>
-    </>
+    </SuiProviderWrapper>
   );
 };

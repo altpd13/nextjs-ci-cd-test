@@ -59,7 +59,7 @@ export const postSuiModuleVerification = async (
       }
     );
 
-    if (response.status === 200) {
+    if (response.status === 201) {
       return response.data;
     }
     return null;
@@ -117,17 +117,20 @@ export const postSuiSourceVerification = async (
     const formData = new FormData();
     formData.append("network", network);
     formData.append("packageId", packageId);
-    formData.append("srcZipFile", multerFileToBlob(srcZipFile));
+    formData.append("srcZipFile", srcZipFile);
     // formData.append("srcFileId", srcFileId);
+    const response = await axios.post(
+      "https://verify.welldonestudio.io/sui/verifications/sources",
+      formData,
+      {
+        headers: {
+          accept: "application/json",
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
-    const response = await axios.post("https://verify.welldonestudio.io/sui/verifications/sources", formData, {
-      headers: {
-        accept: "application/json",
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    if (response.status === 200) {
+    if (response.status === 201) {
       return response.data;
     }
     return null;

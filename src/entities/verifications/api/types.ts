@@ -95,7 +95,7 @@ export type GetSuiVerificationModuleSourceQueryResponseDto = {
 export type PostSuiVerificationSourceRequestBodyDto = {
   network: SuiNetwork;
   packageId: string;
-  srcZipFile: Express.Multer.File;
+  srcZipFile: File;
   srcFileId: string;
 };
 export type PostSuiVerificationSourceResponseDto = {
@@ -129,7 +129,8 @@ export type GetNeutronDepolyHistoriesSingleRequestDto = {
   chainId: NeutronChainId;
   contract: string;
 };
-export type GetNeutronDepolyHistoriesSingleResponseDto = NeutronDeployHistorySingle;
+export type GetNeutronDepolyHistoriesSingleResponseDto =
+  NeutronDeployHistorySingle;
 // source-codes/neutron-1?contract=neutron18vgsz69fd8ceaxtx0qkduprvfajxy348hlfdhllwvsu6efn3z4sst4gkat
 export type GetNeutronSourceCodesRequestDto = {
   chainId: NeutronChainId;

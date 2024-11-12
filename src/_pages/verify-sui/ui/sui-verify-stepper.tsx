@@ -9,7 +9,7 @@ import ResultVerifySui from "./result-verify-sui";
 
 const steps = [
   { label: "Select Package" },
-  { label: "Verify & Publish" },
+  { label: "Verify" },
 ] satisfies StepItem[];
 
 interface SuiVeifyStepperProps {
@@ -48,13 +48,7 @@ const SuiVerifyStepper: FC<SuiVeifyStepperProps> = ({
       >
         {steps.map((stepProps, index) => {
           return (
-            //Steps needed for Sui verification
-            // 1. upload src with package Id
-            // - must check if src was uploaded
-            // - must check if packageId is valid
-            // 1-1.
-            // source
-            // 2. verification result
+            
             <Step key={stepProps.label} {...stepProps}>
               {index === 0 && (
                 <SuiContractVerifyForm

@@ -7,6 +7,7 @@ import { SuiNetwork } from "@/src/entities/verifications/model/types";
 import { baseUrl } from "@/src/features/verify/api";
 import { SuiVerifiedInfo } from "./sui-verified-info";
 import SuiVerifyStepper from "./sui-verify-stepper";
+import SuiProviderWrapper from "./sui-provider-wrapper";
 
 export const SuiVerifyPage = async ({
   searchParams,
@@ -42,6 +43,7 @@ export const SuiVerifyPage = async ({
         <div className="flex w-full flex-col justify-center gap-4">
           {verifiedSrcUrl ? (
             <SuiVerifiedInfo
+              network={network}
               packageId={objectId!}
               verifiedSrcUrl={verifiedSrcUrl}
             />

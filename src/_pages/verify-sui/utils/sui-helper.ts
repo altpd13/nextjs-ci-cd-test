@@ -117,9 +117,9 @@ export function getProvider(chainId: SuiNetwork): SuiClient {
   throw new Error(`Invalid ChainId=${chainId}`);
 }
 
-export async function getModules(packageId: string) {
+export async function getModules(packageId: string, network: SuiNetwork) {
   const suiMoveNormalizedModules = await getProvider(
-    "testnet"
+    network
   ).getNormalizedMoveModulesByPackage({
     package: packageId,
   });
