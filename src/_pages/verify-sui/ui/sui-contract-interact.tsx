@@ -7,6 +7,7 @@ import {
   SuiMoveNormalizedType,
   getFullnodeUrl,
 } from "@mysten/sui/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { SuiNetwork } from "@/src/entities/verifications/model/types";
 
@@ -137,9 +138,12 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
     moduleName: string,
     func: SuiFunc,
     typeArgs: string[],
-    args: any[]
+    args: any[],
   ) => {
-    const tx = new Transaction();
+    if (!currentAccount) {
+      return;
+    }
+    const tx = new TransactionBlock();
     tx.setSender(currentAccount!.address);
     const moveCallInput = {
       target: `${packageId}::${moduleName}::${func.name}`,
@@ -163,7 +167,7 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
     };
     tx.moveCall(moveCallInput);
     console.log(tx);
-    return tx.toJSON();
+    return tx.serialize();
   };
 
   return (
@@ -229,14 +233,20 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
             )}
           </div>
           <Button
-            onClick={() => {
-              moveCall(
+            onClick={async () => {
+              const dappTxn_ = moveCall(
                 packageId,
                 targetModuleName,
                 targetFunc!,
                 genericParameters,
-                parameters
+                parameters,
               );
+              const dapp = window.dapp as any;
+              const txnHash: string[] = await dapp.request("sui", {
+                method: "dapp:signAndSendTransaction",
+                params: [dappTxn_],
+              });
+              console.log(txnHash);
             }}
           >
             Execute
