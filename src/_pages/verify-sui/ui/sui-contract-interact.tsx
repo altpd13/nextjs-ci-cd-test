@@ -16,6 +16,9 @@ import {
   createNetworkConfig,
   SuiClientProvider,
   useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSignTransaction,
+  useSuiClient,
   WalletProvider,
 } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -64,9 +67,11 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
   const [targetFunc, setTargetFunc] = useState<SuiFunc>();
   const [genericParameters, setGenericParameters] = useState<string[]>([]);
   const [parameters, setParameters] = useState<any[]>([]);
-
+  const client = useSuiClient();
   const currentAccount = useCurrentAccount();
   const [open, setOpen] = useState(false);
+  const { mutateAsync: signTransaction } = useSignTransaction();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
   const initPackageCtx = async (packageId: string) => {
     try {
@@ -133,13 +138,13 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
     initPackageCtx(packageId);
   }, []);
 
-  const moveCall = (
+  const moveCallTxBlock = (
     packageId: string,
     moduleName: string,
     func: SuiFunc,
     typeArgs: string[],
     args: any[],
-  ) => {
+  ): TransactionBlock | undefined => {
     if (!currentAccount) {
       return;
     }
@@ -167,7 +172,89 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
     };
     tx.moveCall(moveCallInput);
     console.log(tx);
-    return tx.serialize();
+    return tx;
+  };
+
+  const moveCallTx = (
+    packageId: string,
+    moduleName: string,
+    func: SuiFunc,
+    typeArgs: string[],
+    args: any[],
+  ): Transaction | undefined => {
+    if (!currentAccount) {
+      return;
+    }
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${packageId}::${moduleName}::${func.name}`,
+      arguments: [
+        tx.object(
+          "0x4f2686c00b3cf9bdc1db59ae2f65946c50dc84d0cf188be5e165fb7accb73e74",
+        ),
+        tx.pure.u8(1),
+        tx.pure.u8(1),
+        tx.pure.address(
+          "0xc536b015c90274aa6a5fceda93a4459e25e7d94b25bfa4e61f445b4e39647f03",
+        ),
+      ],
+
+      // arguments: args.map((arg, i) => {
+      //   console.log(`@@@ moveCallTx arg ${i}`, arg);
+      //   const parameter: any = func.parameters[i];
+      //   if (
+      //     parameter.Vector?.Struct &&
+      //     !(
+      //       parameter.Vector.Struct.address === "0x1" &&
+      //       parameter.Vector.Struct.module === "string" &&
+      //       parameter.Vector.Struct.name === "String"
+      //     )
+      //   ) {
+      //     return tx.makeMoveVec({
+      //       elements: arg.map((a: any) => tx.pure(a)),
+      //     });
+      //   }
+      //   return tx.pure.string(arg);
+      // }),
+    });
+    return tx;
+  };
+
+  const moveCall2 = (
+    packageId: string,
+    moduleName: string,
+    func: SuiFunc,
+    typeArgs: string[],
+    args: any[],
+  ): TransactionBlock | undefined => {
+    if (!currentAccount) {
+      return;
+    }
+    const tx = new TransactionBlock();
+    tx.setSender(currentAccount!.address);
+    const moveCallInput = {
+      target: `${packageId}::${moduleName}::${func.name}`,
+      typeArguments: typeArgs,
+      arguments: args.map((arg, i) => {
+        const parameter: any = func.parameters[i];
+        if (
+          parameter.Vector?.Struct &&
+          !(
+            parameter.Vector.Struct.address === "0x1" &&
+            parameter.Vector.Struct.module === "string" &&
+            parameter.Vector.Struct.name === "String"
+          )
+        ) {
+          return tx.makeMoveVec({
+            elements: arg.map((a: any) => tx.pure(a)),
+          });
+        }
+        return tx.pure(arg);
+      }),
+    };
+    tx.moveCall(moveCallInput);
+    console.log(tx);
+    return tx;
   };
 
   return (
@@ -234,7 +321,7 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
           </div>
           <Button
             onClick={async () => {
-              const dappTxn_ = moveCall(
+              const txBlock = moveCallTxBlock(
                 packageId,
                 targetModuleName,
                 targetFunc!,
@@ -244,9 +331,52 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
               const dapp = window.dapp as any;
               const txnHash: string[] = await dapp.request("sui", {
                 method: "dapp:signAndSendTransaction",
-                params: [dappTxn_],
+                params: [txBlock.serialize()],
               });
               console.log(txnHash);
+
+              // console.log(`@@@ client`, client);
+              // const tx = moveCallTx(
+              //   packageId,
+              //   targetModuleName,
+              //   targetFunc!,
+              //   genericParameters,
+              //   parameters,
+              // );
+              // if (!tx) {
+              //   console.error(`tx is empty`);
+              //   return;
+              // }
+
+              // ---------------------------------------------
+              // const { bytes, signature, reportTransactionEffects } =
+              //   await signTransaction({
+              //     transaction: tx,
+              //     chain: `sui:${network}`,
+              //   });
+              // const executeResult = await client.executeTransactionBlock({
+              //   transactionBlock: bytes,
+              //   signature,
+              //   options: {
+              //     showRawEffects: true,
+              //   },
+              // });
+              //
+              // console.log(`@@@ executeResult`, executeResult);
+
+              // ---------------------------------------------
+              // signAndExecuteTransaction(
+              //   {
+              //     transaction: tx,
+              //     chain: "sui:devnet",
+              //   },
+              //   {
+              //     onSuccess: (result) => {
+              //       console.log("executed transaction", result);
+              //       setDigest(result.digest);
+              //     },
+              //   },
+              // );
             }}
           >
             Execute
