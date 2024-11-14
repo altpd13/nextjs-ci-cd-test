@@ -18,6 +18,7 @@ export const SuiVerifyPage = async ({
   const objectId = searchParams?.contractAddress;
   let isVerified = false;
   let verifiedSrcUrl = null;
+  let walrusBlobId = null;
   let initialStep = 0;
   let result = null;
   let isRemixSrcUploaded = false;
@@ -26,6 +27,7 @@ export const SuiVerifyPage = async ({
     result = await getSuiVerification({ network, packageId: objectId });
     if (result?.isVerified) {
       verifiedSrcUrl = result.verifiedSrcUrl;
+      walrusBlobId = result.walrusBlobId;
       isVerified = result.isVerified;
       isRemixSrcUploaded = result.isRemixSrcUploaded;
     }
@@ -46,6 +48,7 @@ export const SuiVerifyPage = async ({
               network={network}
               packageId={objectId!}
               verifiedSrcUrl={verifiedSrcUrl}
+              walrusBlobId={walrusBlobId}
             />
           ) : (
             <SuiVerifyStepper

@@ -9,17 +9,48 @@ import SuiProviderWrapper from "./sui-provider-wrapper";
 // For Sui Modal
 import "@mysten/dapp-kit/dist/index.css";
 import { SuiNetwork } from "@/src/entities/verifications/model/types";
+import axios, { AxiosRequestConfig } from "axios";
 
 interface VerifiedInfoProps {
   network: SuiNetwork;
   packageId: string;
   verifiedSrcUrl: string;
+  walrusBlobId?: string;
 }
+const downloadFile = async () => {
+  const response = await fetch(
+    `https://aggregator.walrus-testnet.walrus.space/v1/${walrusBlobId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    console.error("File download failed.");
+    return;
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "WalrusFile.zip"; // 원하는 파일 이름 설정
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url); // 메모리 해제
+};
+
+// 호출
 
 export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
   network,
   packageId,
   verifiedSrcUrl,
+  walrusBlobId,
 }) => {
   return (
     <SuiProviderWrapper network={network}>
@@ -27,10 +58,54 @@ export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
         <p className="block sm:inline">Package {packageId} has been verified</p>
         <br />
         <p className="block sm:inline">
-          You can download the verified source code{" "}
-          <a href={verifiedSrcUrl} className="text-blue-600" download>
-            here
-          </a>
+          <div style={{ display: "flex" }}>
+            You can download the verified source code{" "}
+            <p style={{ marginLeft: "0.5em", marginRight: "0.5em" }}> from </p>
+            {walrusBlobId ? (
+              <div>
+                <button
+                  className="text-blue-600"
+                  onClick={async () => {
+                    console.log(`walrusBlobId=${walrusBlobId}`);
+                    const response = await axios.get(
+                      `https://aggregator.walrus-testnet.walrus.space/v1/${walrusBlobId}`,
+                      {
+                        responseType: "blob", // 파일을 blob 형태로 가져옵니다.
+                      },
+                    );
+                    console.log(`response`, response);
+
+                    if (response.status !== 200) {
+                      console.error("File download failed.");
+                      return;
+                    }
+
+                    const url = window.URL.createObjectURL(
+                      new Blob([response.data]),
+                    );
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "WalrusFile.zip"; // 원하는 파일 이름 설정
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.URL.revokeObjectURL(url); // 메모리 해제
+                  }}
+                >
+                  Walrus ( {walrusBlobId} )
+                </button>
+              </div>
+            ) : (
+              <a
+                href={verifiedSrcUrl}
+                className="text-blue-600"
+                download
+                style={{ marginLeft: "0.5em" }}
+              >
+                here
+              </a>
+            )}
+          </div>
         </p>
       </div>
       <Tabs defaultValue="code">
