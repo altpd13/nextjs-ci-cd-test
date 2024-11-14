@@ -1,11 +1,16 @@
 "use client";
-
+import { FC } from "react";
 import JSZip from "jszip";
-import { File, Folder } from "lucide-react";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+import * as React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { a11yDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { File, Folder } from "lucide-react";
 import SyntaxHighlighter from "react-syntax-highlighter";
+import { a11yDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
+
+interface CodeExplorerProps {
+  url: string;
+}
 
 type File = {
   name: string;
@@ -19,7 +24,8 @@ type FileStructure = {
   children?: FileStructure[];
 };
 
-export const SuiCodeExplorer = (url: string) => {
+export const CodeExplorer: FC<CodeExplorerProps> = ({ url }) => {
+  console.log(`@@@ CodeExplorer url`, url);
   const [fileStructure, setFileStructure] = React.useState<FileStructure[]>([]);
   const [selectedFile, setSelectedFile] = React.useState<FileStructure | null>(
     null,
@@ -40,7 +46,7 @@ export const SuiCodeExplorer = (url: string) => {
     const codes = await Promise.all(filePromises);
     return codes;
   };
-  //TODO: Get rid of build file when rendering
+
   const fetchZip = async (url: string) => {
     const zipFile = await fetch(url);
     const arrayBuffer = await zipFile.arrayBuffer();
@@ -72,7 +78,7 @@ export const SuiCodeExplorer = (url: string) => {
       }
       return acc;
     }, []);
-    setFileStructure(structedFiles);
+    setFileStructure(structedFiles.filter((f) => f.name !== "__MACOSX"));
   };
 
   useEffect(() => {

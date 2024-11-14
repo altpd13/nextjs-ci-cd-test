@@ -1,10 +1,11 @@
 "use client";
 
-import { FC } from "react";
+import React, { FC } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/shared/ui";
-import { CodeExplorer } from "../../verify/ui/code-explorer";
+import { CodeExplorer } from "./sui-code-explorer";
 import { SuiContractInteract } from "./sui-contract-interact";
 import SuiProviderWrapper from "./sui-provider-wrapper";
+import Image from "next/image";
 
 // For Sui Modal
 import "@mysten/dapp-kit/dist/index.css";
@@ -65,6 +66,12 @@ export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
               <div>
                 <button
                   className="text-blue-600"
+                  style={{
+                    border: "none",
+                    padding: "0",
+                    backgroundColor: "transparent",
+                    cursor: "pointer",
+                  }}
                   onClick={async () => {
                     console.log(`walrusBlobId=${walrusBlobId}`);
                     const response = await axios.get(
@@ -92,7 +99,15 @@ export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
                     window.URL.revokeObjectURL(url); // 메모리 해제
                   }}
                 >
-                  Walrus ( {walrusBlobId} )
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <Image
+                      src="/Walrus.png"
+                      alt="Walrus Icon"
+                      width={"40"}
+                      height={"40"}
+                    ></Image>
+                    {walrusBlobId}
+                  </div>
                 </button>
               </div>
             ) : (
@@ -110,11 +125,27 @@ export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
       </div>
       <Tabs defaultValue="code">
         <TabsList>
-          <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="code">
+            Code
+            {walrusBlobId && (
+              <Image
+                src="/Walrus.png"
+                alt="Walrus Icon"
+                width={"40"}
+                height={"40"}
+              />
+            )}
+          </TabsTrigger>
           <TabsTrigger value="interact">Interact</TabsTrigger>
         </TabsList>
         <TabsContent value="code">
-          <CodeExplorer url={verifiedSrcUrl} />
+          <CodeExplorer
+            url={
+              walrusBlobId
+                ? `https://aggregator.walrus-testnet.walrus.space/v1/${walrusBlobId}`
+                : verifiedSrcUrl
+            }
+          />
         </TabsContent>
         <TabsContent value="interact">
           <SuiContractInteract network={network} packageId={packageId} />
