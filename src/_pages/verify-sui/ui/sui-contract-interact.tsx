@@ -16,14 +16,12 @@ import {
   createNetworkConfig,
   SuiClientProvider,
   useCurrentAccount,
-  useSignAndExecuteTransaction,
   useSignTransaction,
   useSuiClient,
   WalletProvider,
 } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { ConnectButton, useAccounts } from "@mysten/dapp-kit";
 import {
   Button,
   Select,
@@ -70,8 +68,7 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
   const client = useSuiClient();
   const currentAccount = useCurrentAccount();
   const [open, setOpen] = useState(false);
-  const { mutateAsync: signTransaction } = useSignTransaction();
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { mutateAsync: signTransactionBlock } = useSignTransaction();
 
   const initPackageCtx = async (packageId: string) => {
     try {
@@ -164,13 +161,13 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
           )
         ) {
           return tx.makeMoveVec({
-            elements: arg.map((a: any) => tx.pure(a)),
+            objects: arg.map((a: any) => tx.pure(a)) as any,
           });
         }
         return tx.pure(arg);
       }),
     };
-    tx.moveCall(moveCallInput);
+    tx.moveCall(moveCallInput as any);
     console.log(tx);
     return tx;
   };
@@ -188,54 +185,8 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
     const tx = new Transaction();
     tx.moveCall({
       target: `${packageId}::${moduleName}::${func.name}`,
-      arguments: [
-        tx.object(
-          "0x4f2686c00b3cf9bdc1db59ae2f65946c50dc84d0cf188be5e165fb7accb73e74",
-        ),
-        tx.pure.u8(1),
-        tx.pure.u8(1),
-        tx.pure.address(
-          "0xc536b015c90274aa6a5fceda93a4459e25e7d94b25bfa4e61f445b4e39647f03",
-        ),
-      ],
-
-      // arguments: args.map((arg, i) => {
-      //   console.log(`@@@ moveCallTx arg ${i}`, arg);
-      //   const parameter: any = func.parameters[i];
-      //   if (
-      //     parameter.Vector?.Struct &&
-      //     !(
-      //       parameter.Vector.Struct.address === "0x1" &&
-      //       parameter.Vector.Struct.module === "string" &&
-      //       parameter.Vector.Struct.name === "String"
-      //     )
-      //   ) {
-      //     return tx.makeMoveVec({
-      //       elements: arg.map((a: any) => tx.pure(a)),
-      //     });
-      //   }
-      //   return tx.pure.string(arg);
-      // }),
-    });
-    return tx;
-  };
-
-  const moveCall2 = (
-    packageId: string,
-    moduleName: string,
-    func: SuiFunc,
-    typeArgs: string[],
-    args: any[],
-  ): TransactionBlock | undefined => {
-    if (!currentAccount) {
-      return;
-    }
-    const tx = new TransactionBlock();
-    tx.setSender(currentAccount!.address);
-    const moveCallInput = {
-      target: `${packageId}::${moduleName}::${func.name}`,
-      typeArguments: typeArgs,
       arguments: args.map((arg, i) => {
+        console.log(`@@@ moveCallTx arg ${i}`, arg);
         const parameter: any = func.parameters[i];
         if (
           parameter.Vector?.Struct &&
@@ -248,12 +199,29 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
           return tx.makeMoveVec({
             elements: arg.map((a: any) => tx.pure(a)),
           });
+        } else if (parameter === "Bool") {
+          return tx.pure.u8(arg);
+        } else if (parameter === "U8") {
+          return tx.pure.u8(arg);
+        } else if (parameter === "U16") {
+          return tx.pure.u16(arg);
+        } else if (parameter === "U32") {
+          return tx.pure.u32(arg);
+        } else if (parameter === "U64") {
+          return tx.pure.u64(arg);
+        } else if (parameter === "U128") {
+          return tx.pure.u128(arg);
+        } else if (parameter === "U256") {
+          return tx.pure.u256(arg);
+        } else if (parameter.MutableReference?.Struct) {
+          return tx.object(arg);
+        } else if (parameter === "Address") {
+          return tx.pure.address(arg);
         }
-        return tx.pure(arg);
+
+        return tx.pure.string(arg);
       }),
-    };
-    tx.moveCall(moveCallInput);
-    console.log(tx);
+    });
     return tx;
   };
 
@@ -321,62 +289,49 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
           </div>
           <Button
             onClick={async () => {
-              const txBlock = moveCallTxBlock(
-                packageId,
-                targetModuleName,
-                targetFunc!,
-                genericParameters,
-                parameters,
-              );
-              const dapp = window.dapp as any;
-              const txnHash: string[] = await dapp.request("sui", {
-                method: "dapp:signAndSendTransaction",
-                params: [txBlock.serialize()],
-              });
-              console.log(txnHash);
-
-              // console.log(`@@@ client`, client);
-              // const tx = moveCallTx(
+              // -------------- WELLDONE Wallet ----------------------
+              // const txBlock = moveCallTxBlock(
               //   packageId,
               //   targetModuleName,
               //   targetFunc!,
               //   genericParameters,
               //   parameters,
               // );
-              // if (!tx) {
-              //   console.error(`tx is empty`);
-              //   return;
-              // }
-
-              // ---------------------------------------------
-              // const { bytes, signature, reportTransactionEffects } =
-              //   await signTransaction({
-              //     transaction: tx,
-              //     chain: `sui:${network}`,
-              //   });
-              // const executeResult = await client.executeTransactionBlock({
-              //   transactionBlock: bytes,
-              //   signature,
-              //   options: {
-              //     showRawEffects: true,
-              //   },
+              // const dapp = window.dapp as any;
+              // const txnHash: string[] = await dapp.request("sui", {
+              //   method: "dapp:signAndSendTransaction",
+              //   params: [txBlock.serialize()],
               // });
-              //
-              // console.log(`@@@ executeResult`, executeResult);
+              // console.log(txnHash);
 
-              // ---------------------------------------------
-              // signAndExecuteTransaction(
-              //   {
-              //     transaction: tx,
-              //     chain: "sui:devnet",
-              //   },
-              //   {
-              //     onSuccess: (result) => {
-              //       console.log("executed transaction", result);
-              //       setDigest(result.digest);
-              //     },
-              //   },
-              // );
+              // -------------- SUI Wallet ----------------------
+
+              const tx = moveCallTx(
+                packageId,
+                targetModuleName,
+                targetFunc!,
+                genericParameters,
+                parameters,
+              );
+              if (!tx) {
+                console.error(`tx is empty`);
+                return;
+              }
+
+              const signature = await signTransactionBlock({
+                transaction: tx,
+                chain: `sui:${network}`,
+              });
+
+              const executeResult = await client.executeTransactionBlock({
+                transactionBlock: signature.bytes,
+                signature: signature.signature,
+                options: {
+                  showEffects: true,
+                  showObjectChanges: true,
+                },
+              });
+              console.log(`@@@ executeResult`, executeResult);
             }}
           >
             Execute
