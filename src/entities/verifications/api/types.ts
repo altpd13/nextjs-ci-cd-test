@@ -52,6 +52,7 @@ export type GetSuiVerificationResponseDto = {
   packageId: string; // 0xc948e62bc2e632d7107717d23ff05872e7c847e2c78851af37885c4f54bef0c0
   isVerified: boolean;
   isRemixSrcUploaded: boolean;
+  walrusBlobId?: string | null;
   verifiedSrcUrl: string | null; // https://verification-storage.com/sui/mainnet/0xc948e62bc2e632d7107717d23ff05872e7c847e2c78851af37885c4f54bef0c0/1694998406166/1694998406166.zip
   errMsg: string | null; // Source code was not uploaded.
 };

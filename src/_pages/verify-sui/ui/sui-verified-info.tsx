@@ -16,36 +16,8 @@ interface VerifiedInfoProps {
   network: SuiNetwork;
   packageId: string;
   verifiedSrcUrl: string;
-  walrusBlobId?: string;
+  walrusBlobId?: string | null;
 }
-const downloadFile = async () => {
-  const response = await fetch(
-    `https://aggregator.walrus-testnet.walrus.space/v1/${walrusBlobId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/octet-stream",
-      },
-    },
-  );
-
-  if (!response.ok) {
-    console.error("File download failed.");
-    return;
-  }
-
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "WalrusFile.zip"; // 원하는 파일 이름 설정
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.URL.revokeObjectURL(url); // 메모리 해제
-};
-
-// 호출
 
 export const SuiVerifiedInfo: FC<VerifiedInfoProps> = ({
   network,
