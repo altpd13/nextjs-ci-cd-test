@@ -1,26 +1,20 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 
-import {
-  SuiClient,
-  SuiMoveNormalizedType,
-  getFullnodeUrl,
-} from "@mysten/sui/client";
+import { getFullnodeUrl } from "@mysten/sui/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 import { SuiNetwork } from "@/src/entities/verifications/model/types";
-
 import {
   ConnectModal,
   createNetworkConfig,
-  SuiClientProvider,
   useCurrentAccount,
+  useDisconnectWallet,
   useSignTransaction,
   useSuiClient,
-  WalletProvider,
 } from "@mysten/dapp-kit";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
 import {
   Button,
@@ -69,6 +63,9 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
   const currentAccount = useCurrentAccount();
   const [open, setOpen] = useState(false);
   const { mutateAsync: signTransactionBlock } = useSignTransaction();
+  const { mutate: disconnect } = useDisconnectWallet();
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [txResult, setTxResult] = useState<any>();
 
   const initPackageCtx = async (packageId: string) => {
     try {
@@ -224,20 +221,90 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
     });
     return tx;
   };
+  const handleCopy = () => {
+    if (currentAccount) {
+      navigator.clipboard
+        .writeText(currentAccount.address)
+        .then(() => {
+          setTooltipVisible(true); // 복사 성공 시 툴팁 표시
+          setTimeout(() => setTooltipVisible(false), 2000); // 2초 후 툴팁 숨기기
+        })
+        .catch((err) => {
+          console.error("Failed to copy address: ", err); // 복사 실패시 에러 로그
+        });
+    }
+  };
 
   return (
     <>
-      <ConnectModal
-        trigger={
-          <button disabled={!!currentAccount}>
-            {" "}
-            {currentAccount ? "Connected" : "Connect"}
-          </button>
-        }
-        open={open}
-        onOpenChange={(isOpen) => setOpen(isOpen)}
-      />
-      {currentAccount && <div>{currentAccount.address}</div>}
+      <div
+        style={{ display: "flex", alignItems: "center", marginBottom: "1em" }}
+      >
+        <div style={{ marginRight: "0.5em" }}>
+          <ConnectModal
+            trigger={
+              <button
+                className={`px-4 py-2 font-semibold text-white rounded-lg transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  currentAccount
+                    ? "bg-red-500 hover:bg-red-600 focus:ring-red-500"
+                    : "bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
+                }`}
+                onClick={() => {
+                  if (currentAccount) {
+                    disconnect();
+                  }
+                }}
+                aria-label={
+                  currentAccount ? "Disconnect account" : "Connect to account"
+                }
+              >
+                {currentAccount
+                  ? `Disconnect (${currentAccount.chains.map((c) => {
+                      return c.replace("sui:", "");
+                    })})`
+                  : "Connect"}
+              </button>
+            }
+            open={open}
+            onOpenChange={(isOpen) => setOpen(isOpen)}
+          />
+        </div>
+        {currentAccount && (
+          <div style={{ display: "flex" }}>
+            <div
+              className={`${
+                currentAccount
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-200 text-gray-500"
+              } p-4 rounded-lg font-semibold text-sm flex items-center justify-between`}
+            >
+              <span>
+                {currentAccount
+                  ? currentAccount.address
+                  : "No account connected"}
+              </span>
+              {currentAccount && (
+                <div className="relative">
+                  <button
+                    onClick={handleCopy}
+                    className="ml-4 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                    aria-label="Copy address"
+                  >
+                    Copy
+                  </button>
+                  {/* 툴팁 */}
+                  {tooltipVisible && (
+                    <div className="absolute top-[-30px] left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded py-1 px-2">
+                      Address copied!
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {modules[0] && (
         <div className="interact-container flex row gap-5">
           <div className="modules-functions-container flex col gap-5">
@@ -287,55 +354,83 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
               ></Parameters>
             )}
           </div>
-          <Button
-            onClick={async () => {
-              // -------------- WELLDONE Wallet ----------------------
-              // const txBlock = moveCallTxBlock(
-              //   packageId,
-              //   targetModuleName,
-              //   targetFunc!,
-              //   genericParameters,
-              //   parameters,
-              // );
-              // const dapp = window.dapp as any;
-              // const txnHash: string[] = await dapp.request("sui", {
-              //   method: "dapp:signAndSendTransaction",
-              //   params: [txBlock.serialize()],
-              // });
-              // console.log(txnHash);
-
-              // -------------- SUI Wallet ----------------------
-
-              const tx = moveCallTx(
-                packageId,
-                targetModuleName,
-                targetFunc!,
-                genericParameters,
-                parameters,
-              );
-              if (!tx) {
-                console.error(`tx is empty`);
-                return;
-              }
-
-              const signature = await signTransactionBlock({
-                transaction: tx,
-                chain: `sui:${network}`,
-              });
-
-              const executeResult = await client.executeTransactionBlock({
-                transactionBlock: signature.bytes,
-                signature: signature.signature,
-                options: {
-                  showEffects: true,
-                  showObjectChanges: true,
-                },
-              });
-              console.log(`@@@ executeResult`, executeResult);
+          <div
+            style={{
+              display: "flex",
+              alignItems: "start",
             }}
           >
-            Execute
-          </Button>
+            <Button
+              onClick={async () => {
+                // -------------- WELLDONE Wallet ----------------------
+                // const txBlock = moveCallTxBlock(
+                //   packageId,
+                //   targetModuleName,
+                //   targetFunc!,
+                //   genericParameters,
+                //   parameters,
+                // );
+                // const dapp = window.dapp as any;
+                // const txnHash: string[] = await dapp.request("sui", {
+                //   method: "dapp:signAndSendTransaction",
+                //   params: [txBlock.serialize()],
+                // });
+                // console.log(txnHash);
+
+                // -------------- SUI Wallet ----------------------
+
+                const tx = moveCallTx(
+                  packageId,
+                  targetModuleName,
+                  targetFunc!,
+                  genericParameters,
+                  parameters,
+                );
+                if (!tx) {
+                  console.error(`tx is empty`);
+                  return;
+                }
+
+                const signature = await signTransactionBlock({
+                  transaction: tx,
+                  chain: `sui:${network}`,
+                });
+
+                const executeResult = await client.executeTransactionBlock({
+                  transactionBlock: signature.bytes,
+                  signature: signature.signature,
+                  options: {
+                    showEffects: true,
+                    showObjectChanges: true,
+                  },
+                });
+                console.log(`@@@ executeResult`, executeResult);
+                setTxResult({ ...executeResult });
+              }}
+            >
+              Execute
+            </Button>
+            {
+              <div
+                className="flex items-center"
+                style={{ marginLeft: "1em", marginTop: "0.5em" }}
+              >
+                {txResult?.digest ? (
+                  <a
+                    href={`https://suiscan.xyz/${network}/tx/${txResult.digest}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 font-semibold underline"
+                  >
+                    View Transaction ({txResult.digest.slice(0, 8)}...
+                    {txResult.digest.slice(-8)})
+                  </a>
+                ) : (
+                  <span>No transaction found</span>
+                )}
+              </div>
+            }
+          </div>
         </div>
       )}
     </>
