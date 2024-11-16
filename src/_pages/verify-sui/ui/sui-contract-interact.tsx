@@ -1,4 +1,9 @@
 "use client";
+declare global {
+  interface Window {
+    dapp?: any;
+  }
+}
 
 import React, { FC, useEffect, useState } from "react";
 import { bcs } from "@mysten/sui/bcs";
@@ -414,6 +419,9 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
                       genericParameters,
                       parameters,
                     );
+                    if (!txBlock) {
+                      return;
+                    }
                     const dapp = window.dapp as any;
                     const txnHash: string[] = await dapp.request("sui", {
                       method: "dapp:signAndSendTransaction",
