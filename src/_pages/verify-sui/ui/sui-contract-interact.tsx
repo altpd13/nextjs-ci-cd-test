@@ -1,6 +1,7 @@
 "use client";
 
 import React, { FC, useEffect, useState } from "react";
+import { bcs } from "@mysten/sui/bcs";
 
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
@@ -216,7 +217,8 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
           return tx.pure.address(arg);
         }
 
-        return tx.pure.string(arg);
+        // bcs.vector(bcs.string()).serialize(['hello'])
+        return bcs.vector(bcs.string()).serialize(arg);
       }),
     });
     return tx;
