@@ -253,7 +253,12 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
                 }`}
                 onClick={() => {
                   if (currentAccount) {
+                    setTxResult(undefined);
                     disconnect();
+                    if (window.dapp) {
+                      console.log(`@@@ dapp disconnect`);
+                      // todo disconnect welldone wallet
+                    }
                   }
                 }}
                 aria-label={
@@ -364,50 +369,60 @@ export const SuiContractInteract: FC<SuiContractInteractProps> = ({
           >
             <Button
               onClick={async () => {
-                // -------------- WELLDONE Wallet ----------------------
-                // const txBlock = moveCallTxBlock(
-                //   packageId,
-                //   targetModuleName,
-                //   targetFunc!,
-                //   genericParameters,
-                //   parameters,
-                // );
-                // const dapp = window.dapp as any;
-                // const txnHash: string[] = await dapp.request("sui", {
-                //   method: "dapp:signAndSendTransaction",
-                //   params: [txBlock.serialize()],
-                // });
-                // console.log(txnHash);
-
                 // -------------- SUI Wallet ----------------------
+                if (client) {
+                  const tx = moveCallTx(
+                    packageId,
+                    targetModuleName,
+                    targetFunc!,
+                    genericParameters,
+                    parameters,
+                  );
+                  if (!tx) {
+                    console.error(`tx is empty`);
+                    return;
+                  }
 
-                const tx = moveCallTx(
-                  packageId,
-                  targetModuleName,
-                  targetFunc!,
-                  genericParameters,
-                  parameters,
-                );
-                if (!tx) {
-                  console.error(`tx is empty`);
+                  const signature = await signTransactionBlock({
+                    transaction: tx,
+                    chain: `sui:${network}`,
+                  });
+
+                  const executeResult = await client.executeTransactionBlock({
+                    transactionBlock: signature.bytes,
+                    signature: signature.signature,
+                    options: {
+                      showEffects: true,
+                      showObjectChanges: true,
+                    },
+                  });
+                  console.log(`@@@ executeResult`, executeResult);
+                  setTxResult({ ...executeResult });
                   return;
                 }
 
-                const signature = await signTransactionBlock({
-                  transaction: tx,
-                  chain: `sui:${network}`,
-                });
+                // -------------- WELLDONE Wallet ----------------------
 
-                const executeResult = await client.executeTransactionBlock({
-                  transactionBlock: signature.bytes,
-                  signature: signature.signature,
-                  options: {
-                    showEffects: true,
-                    showObjectChanges: true,
-                  },
-                });
-                console.log(`@@@ executeResult`, executeResult);
-                setTxResult({ ...executeResult });
+                if (window.dapp) {
+                  console.log(`@@@ window.dapp`, window.dapp);
+                  console.log(`!!! curruent`, currentAccount);
+                  if (window.dapp) {
+                    const txBlock = moveCallTxBlock(
+                      packageId,
+                      targetModuleName,
+                      targetFunc!,
+                      genericParameters,
+                      parameters,
+                    );
+                    const dapp = window.dapp as any;
+                    const txnHash: string[] = await dapp.request("sui", {
+                      method: "dapp:signAndSendTransaction",
+                      params: [txBlock.serialize()],
+                    });
+                    console.log(txnHash);
+                    return;
+                  }
+                }
               }}
             >
               Execute
